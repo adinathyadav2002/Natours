@@ -1,6 +1,14 @@
 const express = require('express');
 // http request logger
 const morgan = require('morgan');
+// to limit the rate of request for api
+const rateLimit = require('express-rate-limit');
+// security headers
+const helmet = require('helmet');
+const xss = require('xss-clean');
+const mongoSanitize = require('express-mongo-sanitize');
+
+const hpp = require('hpp');
 
 // sub-routers
 const usersRouter = require('./routes/userRoutes');
@@ -12,10 +20,38 @@ const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
 
+app.use(helmet());
 // middleware is group of functions that will run in req and res cycle
 // every middleware get the access of req, res, next
 // middleware to parse incoming JSON data from the request body.
-app.use(express.json());
+// BODY PARSER
+app.use(express.json({ limit: '10kb' }));
+
+// Data sanitization against NOSQL query injection "email": { $gt : ""}
+app.use(mongoSanitize());
+// Data sanitization against XSS (unwanted html in form)
+app.use(xss());
+
+// Prevent parameter pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'difficulty',
+      'prize',
+    ],
+  }),
+);
+
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again in an hour!',
+});
+
+app.use('/api', limiter);
 
 // used to print req on console
 if (process.env.NODE_ENV === 'development') {

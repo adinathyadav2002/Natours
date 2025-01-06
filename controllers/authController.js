@@ -12,10 +12,35 @@ const createToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
+const createSendCode = (user, statusCode, res) => {
+  const token = createToken(user._id);
+
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    ),
+    httpOnly: true,
+  };
+
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+
+  res.cookie('jwt', token, cookieOptions);
+
+  user.password = undefined;
+
+  res.status(statusCode).json({
+    status: 'success',
+    token,
+    data: {
+      user,
+    },
+  });
+};
+
 exports.restrictTo =
   (...roles) =>
   (req, res, next) => {
-    if (!roles.includes(req.body.user.role))
+    if (!roles.includes(req.user.role))
       return next(
         new AppError('You do not have permission to perform this action', 403),
       );
@@ -32,15 +57,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     passwordConfirm: req.body.passwordConfirm,
   });
 
-  const token = createToken(newUser._id);
-
-  res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createSendCode(newUser, 201, res);
 });
 
 exports.login = async (req, res, next) => {
@@ -59,11 +76,7 @@ exports.login = async (req, res, next) => {
     return next(new AppError('Password or email is incorrect!'), 401);
 
   // 3) return token if everything is ok
-  const token = createToken(user._id);
-  res.status(200).json({
-    status: 'sucess',
-    token,
-  });
+  createSendCode(user, 200, res);
 };
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -97,7 +110,7 @@ exports.protect = catchAsync(async (req, res, next) => {
       new AppError('User recently changed password! Please login again.'),
     );
 
-  req.body.user = currentUser;
+  req.user = currentUser;
   next();
 });
 
@@ -165,9 +178,27 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
   // 3) update passwordChangedAt property for user
   // 4) login the user and send jwt to user
 
-  const token = createToken(user._id);
-  res.status(200).json({
-    status: 'sucess',
-    token,
-  });
+  createSendCode(user, 200, res);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  // 1) get user from collection
+  const user = await User.findById(req.user.id).select('+password');
+
+  // 2) check if posted password is correct
+
+  if (
+    !(await user.checkCorrectPassword(req.body.passwordCurrent, user.password))
+  ) {
+    return next(new AppError('Your current password is wrong', 401));
+  }
+
+  // 3) If so update password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  await user.save();
+  // user.findByIdAndUpadate will not work
+
+  // 4) log in user and send jwt
+  createSendCode(user, 200, res);
 });

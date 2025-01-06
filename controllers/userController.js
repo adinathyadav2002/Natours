@@ -24,6 +24,7 @@ exports.postUserData = function (req, res) {
     message: 'This rout is not defined yet!',
   });
 };
+
 exports.getUserData = function (req, res) {
   // internal server error
   res.status(500).json({
@@ -31,23 +32,49 @@ exports.getUserData = function (req, res) {
     message: 'This rout is not defined yet!',
   });
 };
-exports.deleteUserData = function (req, res) {
-  // internal server error
-  res.status(500).json({
-    status: 'error',
-    message: 'This rout is not defined yet!',
-  });
-};
-exports.modifyUserData = catchAsync(async function (req, res) {
-  const user = await User.findOne({ id: req.params.id });
 
-  if (!user) {
-    return new AppError('No User found with that ID!', 404);
+exports.deleteUser = catchAsync(async (req, res, next) => {
+  // 1)  get user
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+
+  // 2) send response
+  res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
+exports.modifyUserData = catchAsync(async function (req, res, next) {
+  // TODO: SHOULD NOT MODIFY THE PASSWORD OR
+  // SHOULD MODIFY ONLY SELECTED FIELDS
+
+  // 1) check if user is updating password or passwordConfirmField
+  if (req.body.password || req.body.passwordConfirm) {
+    return next(
+      new AppError(
+        'This rout is not for password updates! Please use /updateMyPassword',
+        400,
+      ),
+    );
   }
 
-  // internal server error
-  res.status(500).json({
-    status: 'error',
-    message: 'This rout is not defined yet!',
+  // 2) give user limited field to update and update the fields
+  const user = await User.findById(req.user.id);
+  const allowedFields = ['name', 'email'];
+  Object.keys(req.body).forEach((item) => {
+    if (allowedFields.includes(item)) {
+      user[item] = req.body[item];
+    }
+  });
+
+  // 3) render the changes to document
+  await user.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Data modified successfully!',
+    data: {
+      user,
+    },
   });
 });
