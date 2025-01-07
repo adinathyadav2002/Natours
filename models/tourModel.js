@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const slugify = require('slugify');
 const validator = require('validator');
 
@@ -90,6 +89,34 @@ const tourSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      // geoJSON must have type and co-ordinates
+      type: {
+        // this is schema option
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    // embedded documents
+    locations: [
+      {
+        type: {
+          // this is schema option
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   // needed to show virtual properties
   { toJSON: { virtuals: true }, toObject: { virtuals: true } },
@@ -108,6 +135,15 @@ tourSchema.pre('save', function (next) {
   next();
 });
 
+// Embedded code for guides in Tour
+// tourSchema.pre('save', async function (next) {
+//   const guidesPromise = this.guides.map(
+//     async (guideID) => await User.findById(guideID),
+//   );
+//   this.guides = await Promise.all(guidesPromise);
+//   next();
+// });
+
 tourSchema.post('save', function (doc, next) {
   // console.log(doc);
   next();
@@ -116,10 +152,23 @@ tourSchema.post('save', function (doc, next) {
 // regular expression to all the methods that starts with find
 
 // this is Query middleware
+// tourSchema.pre(/^find/, function (next) {
+//   this;
+//   next();
+// });
+
 tourSchema.pre(/^find/, function (next) {
   // tourSchema.pre('find', function (next) {
   this.find({ secreteTour: { $ne: true } });
   this.start = Date.now();
+  next();
+});
+
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v',
+  });
   next();
 });
 

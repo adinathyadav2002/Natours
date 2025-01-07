@@ -42,7 +42,7 @@ exports.getToursData = catchAsync(async function (req, res, next) {
 
   const tours = await features.query;
 
-  if (!tours) return new AppError('No Tours found!', 404);
+  if (!tours) return next(new AppError('No Tours found!', 404));
 
   // ANOTHER WAY TO SPECIFY ENDPOINTS
   // const tours = await Tour.find()
@@ -63,7 +63,7 @@ exports.getToursData = catchAsync(async function (req, res, next) {
 exports.getTourData = catchAsync(async function (req, res, next) {
   const tour = await Tour.findById(req.params.id);
 
-  if (!tour) return new AppError('No Tour found with that ID', 404);
+  if (!tour) return next(new AppError('No Tour found with that ID', 404));
 
   res.status(200).json({
     status: 'success',
