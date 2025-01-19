@@ -1,6 +1,7 @@
 const express = require('express');
 const tourController = require('../controllers/tourController');
 const authController = require('../controllers/authController');
+const reviewRouter = require('./reviewRoutes');
 
 const router = express.Router();
 
@@ -47,4 +48,14 @@ router
 // .post(tourController.checkTourData, tourController.postTourData);
 //   using multiple middleware
 
+// Insted of doing this use express to handle nested routes
+// router
+//   .route('/:tourID/reviews')
+//   .post(
+//     authController.protect,
+//     authController.restrictTo('user'),
+//     reviewController.postReviewData,
+//   );
+
+router.use('/:tourID/reviews', reviewRouter);
 module.exports = router;

@@ -3,46 +3,60 @@ const User = require('../models/userModel');
 const catchAsync = require('../utilities/catchAsync');
 const AppError = require('../utilities/appError');
 
-exports.getUsersData = catchAsync(async (req, res) => {
-  const users = await User.find();
+const factoryController = require('./factoryController');
 
-  if (!users) return new AppError('No Tours found!', 404);
+exports.getUsersData = factoryController.getAll(User);
+exports.postUserData = factoryController.createOne(User);
+exports.getUserData = factoryController.getOne(User);
+exports.deleteUser = factoryController.deleteOne(User);
 
-  // internal server error
-  res.status(200).json({
-    status: 'success',
-    data: {
-      users,
-    },
-  });
-});
+/*************************************************************************** */
+// Instead writing same code in each Controller file
+// we refactored our that code using factoryController
 
-exports.postUserData = function (req, res) {
-  // internal server error
-  res.status(500).json({
-    status: 'error',
-    message: 'This rout is not defined yet!',
-  });
-};
+// exports.getUsersData = catchAsync(async (req, res) => {
+//   const users = await User.find();
 
-exports.getUserData = function (req, res) {
-  // internal server error
-  res.status(500).json({
-    status: 'error',
-    message: 'This rout is not defined yet!',
-  });
-};
+//   if (!users) return new AppError('No Tours found!', 404);
 
-exports.deleteUser = catchAsync(async (req, res, next) => {
-  // 1)  get user
-  await User.findByIdAndUpdate(req.user.id, { active: false });
+//   // internal server error
+//   res.status(200).json({
+//     status: 'success',
+//     results: users.length,
+//     data: {
+//       users,
+//     },
+//   });
+// });
 
-  // 2) send response
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
-});
+// exports.postUserData = function (req, res) {
+//   // internal server error
+//   res.status(500).json({
+//     status: 'error',
+//     message: 'This rout is not defined yet!',
+//   });
+// };
+
+// exports.getUserData = function (req, res) {
+//   // internal server error
+//   res.status(500).json({
+//     status: 'error',
+//     message: 'This rout is not defined yet!',
+//   });
+// };
+
+// exports.deleteUser = catchAsync(async (req, res, next) => {
+//   // 1)  get user
+//   await User.findByIdAndUpdate(req.user.id, { active: false });
+
+//   // 2) send response
+//   res.status(204).json({
+//     status: 'success',
+//     data: null,
+//   });
+// });
+
+/*************************************************************************** */
 
 exports.modifyUserData = catchAsync(async function (req, res, next) {
   // TODO: SHOULD NOT MODIFY THE PASSWORD OR

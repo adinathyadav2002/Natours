@@ -13,6 +13,7 @@ const hpp = require('hpp');
 // sub-routers
 const usersRouter = require('./routes/userRoutes');
 const toursRouter = require('./routes/tourRoutes');
+const reviewRouter = require('./routes/reviewRoutes');
 
 // error handling
 const AppError = require('./utilities/appError');
@@ -62,7 +63,7 @@ if (process.env.NODE_ENV === 'development') {
 // if middleware is defined after sending the response
 // then it will not run so position of middleware in code important
 app.use((req, res, next) => {
-  console.log(req.headers);
+  // console.log(req.headers);
   next(); // it is compulsory to call next
 });
 
@@ -91,6 +92,7 @@ app.use((req, res, next) => {
 
 app.use('/api/v1/tours', toursRouter);
 app.use('/api/v1/users', usersRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 // TODO: to handle all the url which do not match upside url's
 app.all('*', (req, res, next) => {

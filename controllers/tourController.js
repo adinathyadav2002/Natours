@@ -2,6 +2,8 @@
 
 const APIFeatures = require('../utilities/apiFeatures');
 
+const factoryController = require('./factoryController');
+
 const Tour = require('../models/tourModel');
 
 const catchAsync = require('../utilities/catchAsync');
@@ -61,7 +63,7 @@ exports.getToursData = catchAsync(async function (req, res, next) {
 });
 
 exports.getTourData = catchAsync(async function (req, res, next) {
-  const tour = await Tour.findById(req.params.id);
+  const tour = await Tour.findById(req.params.id).populate('review');
 
   if (!tour) return next(new AppError('No Tour found with that ID', 404));
 
@@ -77,61 +79,69 @@ exports.getTourData = catchAsync(async function (req, res, next) {
   // const tour = tours.find((item) => item._id === id);
 });
 
-// NO NEED BECAUSE FORM VALIDATION WILL BE DONE BY MONGODB
-// exports.checkTourData = function (req, res, next) {
-//   const obj = req.body;
-//   if (!('name' in obj) || !('difficulty' in obj) || !('duration' in obj)) {
-//     return res.status(400).json({
-//       status: 'error',
-//       message: 'sent incorrect request!',
-//     });
-//   }
-//   next();
-// };
+exports.postTourData = factoryController.createOne(Tour);
+exports.deleteTourData = factoryController.deleteOne(Tour);
 
-exports.postTourData = catchAsync(async function (req, res, next) {
-  // app.use(express.json());
-  //
-  // without above midleware it is undefined
-  // console.log(req.body);
-  // const newId = tours[tours.length - 1]._id + 1;
-  // /* eslint-disable-next-line prefer-object-spread */
-  // const newTour = Object.assign({ _id: newId }, req.body);
-  // tours.push(newTour);
-  // fs.writeFile(
-  //   `${__dirname}/div-data/data/tours.json`,
-  //   JSON.stringify(tours),
-  //   (err) => {
-  //     res.status(201).json({
-  //       status: 'success',
-  //       data: {
-  //         tour: newTour,
-  //       },
-  //     });
-  //   },
-  // );
+/**********************************************************************************/
+// Instead writing same code in each Controller file
+// we refactored our that code using factoryController
 
-  const newTour = await Tour.create(req.body);
-  res.status(201).json({
-    status: 'success',
-    data: {
-      tour: newTour,
-    },
-  });
-});
+// // NO NEED BECAUSE FORM VALIDATION WILL BE DONE BY MONGODB
+// // exports.checkTourData = function (req, res, next) {
+// //   const obj = req.body;
+// //   if (!('name' in obj) || !('difficulty' in obj) || !('duration' in obj)) {
+// //     return res.status(400).json({
+// //       status: 'error',
+// //       message: 'sent incorrect request!',
+// //     });
+// //   }
+// //   next();
+// // };
 
-exports.deleteTourData = catchAsync(async function (req, res, next) {
-  const tour = await Tour.deleteOne({ _id: req.params.id });
+// exports.postTourData = catchAsync(async function (req, res, next) {
+//   // app.use(express.json());
+//   //
+//   // without above midleware it is undefined
+//   // console.log(req.body);
+//   // const newId = tours[tours.length - 1]._id + 1;
+//   // /* eslint-disable-next-line prefer-object-spread */
+//   // const newTour = Object.assign({ _id: newId }, req.body);
+//   // tours.push(newTour);
+//   // fs.writeFile(
+//   //   `${__dirname}/div-data/data/tours.json`,
+//   //   JSON.stringify(tours),
+//   //   (err) => {
+//   //     res.status(201).json({
+//   //       status: 'success',
+//   //       data: {
+//   //         tour: newTour,
+//   //       },
+//   //     });
+//   //   },
+//   // );
 
-  if (!tour) return new AppError('No Tour found with that ID', 404);
-  res.status(204).json({
-    status: 'success',
-    data: null,
-  });
+//   const newTour = await Tour.create(req.body);
+//   res.status(201).json({
+//     status: 'success',
+//     data: {
+//       tour: newTour,
+//     },
+//   });
+// });
 
-  // console.log(req.params);
-});
+// exports.deleteTourData = catchAsync(async function (req, res, next) {
+//   const tour = await Tour.deleteOne({ _id: req.params.id });
 
+//   if (!tour) return new AppError('No Tour found with that ID', 404);
+//   res.status(204).json({
+//     status: 'success',
+//     data: null,
+//   });
+
+//   // console.log(req.params);
+// });
+
+/**********************************************************************************/
 exports.modifyTourData = catchAsync(async function (req, res, next) {
   // console.log(req.params);
   // TODO: we have to run validators again when we update the tour

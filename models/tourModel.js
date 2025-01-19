@@ -116,20 +116,27 @@ const tourSchema = new mongoose.Schema(
         day: Number,
       },
     ],
+    // referencing
     guides: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   // needed to show virtual properties
   { toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
 
-// VIRTUAL PROPERTIES (properties which are not in database)
+// VIRTUAL PROPERTIES (Mongoose virtuals are not stored in MongoDB, which means you can't query based on Mongoose virtuals.)
 // we calculate them when we get data from database
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
-// DOCUMENT MIDDLEWARE: run only on save() and create()
+tourSchema.virtual('review', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
 
+// DOCUMENT MIDDLEWARE: run only on save() and create()
+// this will not create field because there no field in Tour Schema
 tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
@@ -164,6 +171,7 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
+// user will able to see referenced document not document object_id
 tourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',

@@ -7,7 +7,7 @@ const crypto = require('crypto');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    require: [true, 'Please Enter Your name.'],
+    required: [true, 'Please Enter Your name.'],
     unique: true,
     trim: true,
     validate: [validator.isAlpha, 'User name must only contain characters'],
@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     lowercase: true,
-    require: [true, 'Please enter your mail.'],
+    required: [true, 'Please enter your mail.'],
     validate: [validator.isEmail, 'Please provide valid email'],
   },
   photo: String,
@@ -27,13 +27,13 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    require: [true, 'Please enter password'],
+    required: [true, 'Please enter password'],
     minlength: 8,
     select: false,
   },
   passwordConfirm: {
     type: String,
-    require: [true, 'Please confirm your password!'],
+    required: [true, 'Please confirm your password!'],
     // this will check on CREATE or SAVE of document
     validate: {
       validator: function (val) {

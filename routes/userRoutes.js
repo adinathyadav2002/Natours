@@ -21,13 +21,22 @@ router.post(
 // app.get('/api/v1/tours', getToursData);
 
 router
-  .route('/')
+  .route('/:id')
   .get(authController.protect, userController.getUserData)
-  .delete(authController.protect, userController.deleteUser)
-  .patch(authController.protect, userController.modifyUserData);
+  .patch(authController.protect, userController.modifyUserData)
+  .delete(authController.protect, userController.deleteUser);
 
 router
-  .route('/all')
-  .get(userController.getUsersData)
-  .post(userController.postUserData);
+  .route('/')
+  .get(
+    authController.protect,
+    authController.restrictTo('admin'),
+    userController.getUsersData,
+  )
+  .post(
+    authController.protect,
+    authController.restrictTo('admin'),
+    userController.postUserData,
+  );
+
 module.exports = router;
