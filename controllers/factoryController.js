@@ -3,6 +3,8 @@
 const catchAsync = require('../utilities/catchAsync');
 const AppError = require('../utilities/appError');
 
+const APIFeatures = require('../utilities/apiFeatures');
+
 exports.deleteOne = (Model) =>
   catchAsync(async (req, res, next) => {
     const doc = await Model.deleteOne({ _id: req.params.id });
@@ -14,9 +16,11 @@ exports.deleteOne = (Model) =>
     });
   });
 
-exports.getOne = (Model) =>
+exports.getOne = (Model, populateOpt) =>
   catchAsync(async (req, res, next) => {
-    const doc = await Model.findById(req.params.id);
+    let query = Model.findById(req.params.id);
+    if (populateOpt) query = query.populate(populateOpt);
+    const doc = await query;
 
     if (!doc) return next(new AppError('No document found with that ID', 404));
 
@@ -40,12 +44,27 @@ exports.createOne = (Model) =>
   });
 
 exports.getAll = (Model) =>
-  catchAsync(async (req, res, next) => {
-    const docs = await Model.find();
+  catchAsync(async function (req, res, next) {
+    // This will allow get request on /tour/:tourID/reviews
+    let filter = {};
+    if (req.params.tourID) filter = { tour: req.params.tourID };
+    const features = new APIFeatures(Model.find(filter), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
-    if (!docs) return next(new AppError('No documents found!', 404));
+    const docs = await features.query;
 
-    // internal server error
+    if (!docs) return next(new AppError('No Tours found!', 404));
+
+    // ANOTHER WAY TO SPECIFY ENDPOINTS
+    // const tours = await Tour.find()
+    //   .where('duration')
+    //   .equals(5)
+    //   .where('difficulty')
+    //   .equals('easy');
+
     res.status(200).json({
       status: 'success',
       results: docs.length,

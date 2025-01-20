@@ -10,7 +10,20 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please Enter Your name.'],
     unique: true,
     trim: true,
-    validate: [validator.isAlpha, 'User name must only contain characters'],
+    validate: {
+      validator: function (val) {
+        return !val.split('').some((letter) => {
+          if (
+            (letter >= 'A' && letter <= 'Z') ||
+            (letter >= 'a' && letter <= 'z') ||
+            letter === ' '
+          )
+            return false;
+          return true;
+        });
+      },
+      message: 'User name must only contain characters',
+    },
   },
   email: {
     type: String,

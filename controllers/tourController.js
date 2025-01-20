@@ -1,31 +1,9 @@
-// const fs = require('fs');
-
-const APIFeatures = require('../utilities/apiFeatures');
-
 const factoryController = require('./factoryController');
 
 const Tour = require('../models/tourModel');
 
 const catchAsync = require('../utilities/catchAsync');
 const AppError = require('../utilities/appError');
-
-// WHEN WE WANT TO READ FOR FILE
-// const tours = JSON.parse(
-//   fs.readFileSync(`${__dirname}/../dev-data/data/tours.json`),
-// );
-
-// exports.checkId = function (req, res, next, val) {
-//   const { id } = req.params;
-//   const tour = tours.find((item) => item._id === id);
-//   if (!tour) {
-//     res.status(404).json({
-//       status: 'error',
-//       message: 'Incorrect index',
-//     });
-//     return;
-//   }
-//   next();
-// };
 
 exports.aliasTopFiveCheap = (req, res, next) => {
   // TODO: ALWAYS REMEMBER ENDPOINTS SHOULD BE STRING
@@ -34,114 +12,11 @@ exports.aliasTopFiveCheap = (req, res, next) => {
   next();
 };
 
-// using middleware to check for correct id
-exports.getToursData = catchAsync(async function (req, res, next) {
-  const features = new APIFeatures(Tour.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
-
-  const tours = await features.query;
-
-  if (!tours) return next(new AppError('No Tours found!', 404));
-
-  // ANOTHER WAY TO SPECIFY ENDPOINTS
-  // const tours = await Tour.find()
-  //   .where('duration')
-  //   .equals(5)
-  //   .where('difficulty')
-  //   .equals('easy');
-
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: {
-      tours,
-    },
-  });
-});
-
-exports.getTourData = catchAsync(async function (req, res, next) {
-  const tour = await Tour.findById(req.params.id).populate('review');
-
-  if (!tour) return next(new AppError('No Tour found with that ID', 404));
-
-  res.status(200).json({
-    status: 'success',
-    data: {
-      tour,
-    },
-  });
-
-  // console.log(req.params);
-  // const { id } = req.params;
-  // const tour = tours.find((item) => item._id === id);
-});
-
+exports.getToursData = factoryController.getAll(Tour);
+exports.getTourData = factoryController.getOne(Tour, { path: 'review' });
 exports.postTourData = factoryController.createOne(Tour);
 exports.deleteTourData = factoryController.deleteOne(Tour);
 
-/**********************************************************************************/
-// Instead writing same code in each Controller file
-// we refactored our that code using factoryController
-
-// // NO NEED BECAUSE FORM VALIDATION WILL BE DONE BY MONGODB
-// // exports.checkTourData = function (req, res, next) {
-// //   const obj = req.body;
-// //   if (!('name' in obj) || !('difficulty' in obj) || !('duration' in obj)) {
-// //     return res.status(400).json({
-// //       status: 'error',
-// //       message: 'sent incorrect request!',
-// //     });
-// //   }
-// //   next();
-// // };
-
-// exports.postTourData = catchAsync(async function (req, res, next) {
-//   // app.use(express.json());
-//   //
-//   // without above midleware it is undefined
-//   // console.log(req.body);
-//   // const newId = tours[tours.length - 1]._id + 1;
-//   // /* eslint-disable-next-line prefer-object-spread */
-//   // const newTour = Object.assign({ _id: newId }, req.body);
-//   // tours.push(newTour);
-//   // fs.writeFile(
-//   //   `${__dirname}/div-data/data/tours.json`,
-//   //   JSON.stringify(tours),
-//   //   (err) => {
-//   //     res.status(201).json({
-//   //       status: 'success',
-//   //       data: {
-//   //         tour: newTour,
-//   //       },
-//   //     });
-//   //   },
-//   // );
-
-//   const newTour = await Tour.create(req.body);
-//   res.status(201).json({
-//     status: 'success',
-//     data: {
-//       tour: newTour,
-//     },
-//   });
-// });
-
-// exports.deleteTourData = catchAsync(async function (req, res, next) {
-//   const tour = await Tour.deleteOne({ _id: req.params.id });
-
-//   if (!tour) return new AppError('No Tour found with that ID', 404);
-//   res.status(204).json({
-//     status: 'success',
-//     data: null,
-//   });
-
-//   // console.log(req.params);
-// });
-
-/**********************************************************************************/
 exports.modifyTourData = catchAsync(async function (req, res, next) {
   // console.log(req.params);
   // TODO: we have to run validators again when we update the tour
@@ -247,3 +122,199 @@ exports.getTourPlan = catchAsync(async function (req, res, next) {
     },
   });
 });
+
+exports.getToursWithin = catchAsync(async (req, res, next) => {
+  const { distance, latlng, unit } = req.params;
+
+  const [lat, lng] = latlng.split(',');
+
+  const radius = unit === 'mi' ? distance / 3963.2 : distance / 6378.1;
+
+  if (!lat || !lng) {
+    return next(
+      new AppError(
+        'Please provide latitude and longitude in the format lat,lng',
+      ),
+      400,
+    );
+  }
+
+  const tours = await Tour.find({
+    startLocation: { $geoWithin: { $centerSphere: [[lng, lat], radius] } },
+  });
+
+  res.status(200).json({
+    message: 'success',
+    results: tours.length,
+    data: {
+      tours,
+    },
+  });
+});
+
+exports.getDistance = catchAsync(async (req, res, next) => {
+  const { latlng, unit } = req.params;
+
+  const [lat, lng] = latlng.split(',');
+
+  const multiplier = unit === 'mi' ? 0.000621371 : 0.001;
+
+  if (!lat || !lng) {
+    return next(
+      new AppError(
+        'Please provide latitude and longitude in the format lat,lng',
+      ),
+      400,
+    );
+  }
+
+  const distances = await Tour.aggregate([
+    {
+      $geoNear: {
+        near: {
+          type: 'Point',
+          coordinates: [lng * 1, lat * 1],
+        },
+        distanceField: 'distance',
+        distanceMultiplier: multiplier,
+      },
+    },
+    {
+      $project: {
+        distance: 1,
+        name: 1,
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    message: 'success',
+    data: {
+      distances,
+    },
+  });
+});
+
+/**********************************************************************************/
+// Instead writing same code in each Controller file
+// we refactored our that code using factoryController
+
+// // using middleware to check for correct id
+// exports.getToursData = catchAsync(async function (req, res, next) {
+//   const features = new APIFeatures(Tour.find(), req.query)
+//     .filter()
+//     .sort()
+//     .limitFields()
+//     .paginate();
+
+//   const tours = await features.query;
+
+//   if (!tours) return next(new AppError('No Tours found!', 404));
+
+//   // ANOTHER WAY TO SPECIFY ENDPOINTS
+//   // const tours = await Tour.find()
+//   //   .where('duration')
+//   //   .equals(5)
+//   //   .where('difficulty')
+//   //   .equals('easy');
+
+//   res.status(200).json({
+//     status: 'success',
+//     results: tours.length,
+//     data: {
+//       tours,
+//     },
+//   });
+// });
+
+// exports.getTourData = catchAsync(async function (req, res, next) {
+//   const tour = await Tour.findById(req.params.id).populate('review');
+//   if (!tour) return next(new AppError('No Tour found with that ID', 404));
+//   res.status(200).json({
+//     status: 'success',
+//     data: {
+//       tour,
+//     },
+//   });
+//   // console.log(req.params);
+//   // const { id } = req.params;
+//   // const tour = tours.find((item) => item._id === id);
+// });
+
+// // NO NEED BECAUSE FORM VALIDATION WILL BE DONE BY MONGODB
+// // exports.checkTourData = function (req, res, next) {
+// //   const obj = req.body;
+// //   if (!('name' in obj) || !('difficulty' in obj) || !('duration' in obj)) {
+// //     return res.status(400).json({
+// //       status: 'error',
+// //       message: 'sent incorrect request!',
+// //     });
+// //   }
+// //   next();
+// // };
+
+// exports.postTourData = catchAsync(async function (req, res, next) {
+//   // app.use(express.json());
+//   //
+//   // without above midleware it is undefined
+//   // console.log(req.body);
+//   // const newId = tours[tours.length - 1]._id + 1;
+//   // /* eslint-disable-next-line prefer-object-spread */
+//   // const newTour = Object.assign({ _id: newId }, req.body);
+//   // tours.push(newTour);
+//   // fs.writeFile(
+//   //   `${__dirname}/div-data/data/tours.json`,
+//   //   JSON.stringify(tours),
+//   //   (err) => {
+//   //     res.status(201).json({
+//   //       status: 'success',
+//   //       data: {
+//   //         tour: newTour,
+//   //       },
+//   //     });
+//   //   },
+//   // );
+
+//   const newTour = await Tour.create(req.body);
+//   res.status(201).json({
+//     status: 'success',
+//     data: {
+//       tour: newTour,
+//     },
+//   });
+// });
+
+// exports.deleteTourData = catchAsync(async function (req, res, next) {
+//   const tour = await Tour.deleteOne({ _id: req.params.id });
+
+//   if (!tour) return new AppError('No Tour found with that ID', 404);
+//   res.status(204).json({
+//     status: 'success',
+//     data: null,
+//   });
+
+//   // console.log(req.params);
+// });
+
+/**********************************************************************************/
+
+/**********************************************************************************/
+// SOME EXTRA PART TO LEARN
+// WHEN WE WANT TO READ FOR FILE
+// const tours = JSON.parse(
+//   fs.readFileSync(`${__dirname}/../dev-data/data/tours.json`),
+// );
+
+// exports.checkId = function (req, res, next, val) {
+//   const { id } = req.params;
+//   const tour = tours.find((item) => item._id === id);
+//   if (!tour) {
+//     res.status(404).json({
+//       status: 'error',
+//       message: 'Incorrect index',
+//     });
+//     return;
+//   }
+//   next();
+// };
+/**********************************************************************************/

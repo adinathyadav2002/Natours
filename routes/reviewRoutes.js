@@ -5,35 +5,26 @@ const authController = require('../controllers/authController');
 // to user params from previous routes
 const router = express.Router({ mergeParams: true });
 
+router.use(authController.protect);
+
 router
   .route('/')
-  .get(
-    authController.protect,
-    authController.restrictTo('admin'),
-    reviewController.getReviewsData,
-  )
+  .get(reviewController.getReviewsData)
   .post(
-    authController.protect,
-    authController.restrictTo('admin'),
+    authController.restrictTo('admin', 'user'),
     reviewController.setTourAndUser,
     reviewController.postReviewData,
   );
 
 router
   .route('/:id')
-  .get(
-    authController.protect,
-    authController.restrictTo('admin'),
-    reviewController.getReviewData,
-  )
+  .get(reviewController.getReviewData)
   .patch(
-    authController.protect,
-    authController.restrictTo('admin'),
+    authController.restrictTo('admin', 'user'),
     reviewController.updateReviewData,
   )
   .delete(
-    authController.protect,
-    authController.restrictTo('admin'),
+    authController.restrictTo('admin', 'user'),
     reviewController.deleteReviewData,
   );
 

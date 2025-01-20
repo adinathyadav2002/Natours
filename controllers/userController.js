@@ -5,6 +5,11 @@ const AppError = require('../utilities/appError');
 
 const factoryController = require('./factoryController');
 
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
+
 exports.getUsersData = factoryController.getAll(User);
 exports.postUserData = factoryController.createOne(User);
 exports.getUserData = factoryController.getOne(User);

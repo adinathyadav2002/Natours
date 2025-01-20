@@ -40,6 +40,7 @@ const tourSchema = new mongoose.Schema(
       default: 4.5,
       min: [1, 'A Tour rating must be greater than 1'],
       max: [5, 'A Tour rating must be less than 5'],
+      set: (val) => Math.round(val * 10) / 10,
     },
     difficulty: {
       type: String,
@@ -123,6 +124,17 @@ const tourSchema = new mongoose.Schema(
   { toJSON: { virtuals: true }, toObject: { virtuals: true } },
 );
 
+// Indexing used only for price(Single field index)
+// tourSchema.index({price: 1});
+
+// Used for performance improvement
+// Compound Indexing with fields indexing
+// -1 for descending order
+// 1 for ascending order
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
+
 // VIRTUAL PROPERTIES (Mongoose virtuals are not stored in MongoDB, which means you can't query based on Mongoose virtuals.)
 // we calculate them when we get data from database
 tourSchema.virtual('durationWeeks').get(function () {
@@ -189,11 +201,11 @@ tourSchema.post(/^find/, function (doc, next) {
 });
 
 // AGGREGATION MIDDLEWARE
-tourSchema.pre('aggregate', function (next) {
-  // console.log(this.pipeline());
-  this.pipeline().unshift({ $match: { secreteTour: { $ne: true } } });
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   // console.log(this.pipeline());
+//   this.pipeline().unshift({ $match: { secreteTour: { $ne: true } } });
+//   next();
+// });
 
 const Tour = mongoose.model('Tour', tourSchema);
 

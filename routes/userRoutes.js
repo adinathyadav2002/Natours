@@ -11,32 +11,32 @@ router.post('/login', authController.login);
 router.post('/forgotPassword', authController.forgotPassword);
 router.patch('/resetPassword/:token', authController.resetPassword);
 
+// middleware to authenticate below routes
+// TODO: middlewares run in order
+router.use(authController.protect);
+
+router.get('/me', userController.getMe, userController.getUserData);
+
 router.post(
   '/updatePassword',
-  authController.protect,
+
   authController.updatePassword,
 );
 
 // app.post('/api/v1/tours', postTourData);
 // app.get('/api/v1/tours', getToursData);
 
+router.use(authController.restrictTo('admin'));
+
 router
   .route('/:id')
-  .get(authController.protect, userController.getUserData)
-  .patch(authController.protect, userController.modifyUserData)
-  .delete(authController.protect, userController.deleteUser);
+  .get(userController.getUserData)
+  .patch(userController.modifyUserData)
+  .delete(userController.deleteUser);
 
 router
   .route('/')
-  .get(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.getUsersData,
-  )
-  .post(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.postUserData,
-  );
+  .get(userController.getUsersData)
+  .post(userController.postUserData);
 
 module.exports = router;
