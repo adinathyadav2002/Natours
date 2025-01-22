@@ -13,7 +13,7 @@ exports.aliasTopFiveCheap = (req, res, next) => {
 };
 
 exports.getToursData = factoryController.getAll(Tour);
-exports.getTourData = factoryController.getOne(Tour, { path: 'review' });
+exports.getTourData = factoryController.getOne(Tour, { path: 'reviews' });
 exports.postTourData = factoryController.createOne(Tour);
 exports.deleteTourData = factoryController.deleteOne(Tour);
 
