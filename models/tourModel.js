@@ -4,10 +4,6 @@ const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
   {
-    // name: String,
-    // rating: Number,
-    // price: Number,
-
     name: {
       type: String,
       required: [true, 'A Tour must have a name'],
@@ -65,6 +61,7 @@ const tourSchema = new mongoose.Schema(
         message: 'Discount price need to be less than ({VALUE})',
       },
     },
+    slug: String,
     summary: {
       type: String,
       trim: true,

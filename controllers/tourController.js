@@ -114,6 +114,11 @@ exports.getTourPlan = catchAsync(async function (req, res, next) {
     // },
   ]);
 
+  if (!plan.length)
+    return next(
+      new AppError(`Monthly plan has not been decided for the ${year}.`, 404),
+    );
+
   res.status(202).json({
     status: 'successful',
     length: plan.length,

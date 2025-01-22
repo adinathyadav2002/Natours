@@ -1,0 +1,32 @@
+doctype html 
+html 
+    head 
+        meta(charset='UTF-8')
+        meta(name='viewport' content='width=device-width, initial-scale=1.0')
+        link(rel='stylesheet' herf='https://fonts.googleapis.com/css?family=Lato:300,300i,700')
+        link(rel='stylesheet' href='/css/style.css')
+        link(rel='shortcut icon' type='image/png' href='/img/favicon.png')
+        title Natours | #{title}
+    body 
+        // HEADER
+        include _header.pug
+
+
+        // CONTENT
+        block content
+            
+
+
+        // FOOTER
+        include _footer.pug
+
+        //-*************************************************************
+            -- PUG USES INDENTATION LIKE PYTHON
+            h1= tour
+            //h1 The Forest Hiker       -- REGULAR COMMENT WILL SHOW ON WEBPAGE
+            //-h1 The Forest Hiker      -- ONLY PRESENT HERE
+            p Adinath #{sirname}        -- THIS IS STRING INTERPOLATION
+
+            - const x = 100;            -- WRITING JS
+            h3= x *100                  -- USE ASSIGNMENT OPERATOR WITHOUT SPACE AFTER ELEMENT
+        //-*************************************************************

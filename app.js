@@ -1,3 +1,4 @@
+const path = require('path');
 const express = require('express');
 // http request logger
 const morgan = require('morgan');
@@ -11,6 +12,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 
 // sub-routers
+const viewRouter = require('./routes/viewRoutes');
 const usersRouter = require('./routes/userRoutes');
 const toursRouter = require('./routes/tourRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
@@ -20,6 +22,12 @@ const AppError = require('./utilities/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
+
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
+// serving static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(helmet());
 // middleware is group of functions that will run in req and res cycle
@@ -63,7 +71,6 @@ if (process.env.NODE_ENV === 'development') {
 // if middleware is defined after sending the response
 // then it will not run so position of middleware in code important
 app.use((req, res, next) => {
-  // console.log(req.headers);
   next(); // it is compulsory to call next
 });
 
@@ -90,6 +97,7 @@ app.use((req, res, next) => {
 // app.delete('/api/v1/tours/:id', deleteTourData);
 // app.patch('/api/v1/tours/:id', modifyTourData);
 
+app.use('/', viewRouter);
 app.use('/api/v1/tours', toursRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/reviews', reviewRouter);
