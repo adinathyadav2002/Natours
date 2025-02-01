@@ -28,35 +28,50 @@ if (logOutButton) {
 // event listener for updating email and name form button
 if (updateDataForm) {
   const updateNameEmailButton = updateDataForm.querySelector('.btn');
-  if (updateNameEmailButton)
-    updateNameEmailButton.addEventListener('click', (e) => {
-      e.preventDefault();
-      const email = updateDataForm.querySelector('#email')?.value;
-      const name = updateDataForm.querySelector('#name')?.value;
-      updateUserEmailName({ email, name }, 'data');
-    });
+  updateNameEmailButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    const form = new FormData();
+    form.append('name', updateDataForm.querySelector('#name')?.value);
+    form.append('email', updateDataForm.querySelector('#email')?.value);
+    form.append('photo', updateDataForm.querySelector('#photo')?.files[0]);
+    console.log(form);
+
+    updateUserEmailName(form, 'data');
+
+    // THIS WILL NOT WORK FOR DATA WITH TEXT
+    // const email = updateDataForm.querySelector('#email')?.value;
+    // const name = updateDataForm.querySelector('#name')?.value;
+    // updateUserEmailName({ email, name }, 'data');
+  });
 }
 
 // event listener for updating password form button
-if (updatePasswordForm) {
-  const updatePasswordButton = updatePasswordForm.querySelector('.btn');
-  if (updatePasswordButton)
-    updatePasswordButton.addEventListener('click', async (e) => {
+if (updatePasswordForm && updatePasswordForm.querySelector('.btn')) {
+  updatePasswordForm
+    .querySelector('.btn')
+    .addEventListener('click', async (e) => {
       e.preventDefault();
+
       document.querySelector('.btn--save-password').textContent = 'Updating..';
+
+      // get values from the form
       const passwordCurrent =
-        updatePasswordForm.querySelector('#password-current')?.value;
-      const password = updatePasswordForm.querySelector('#password ')?.value;
+        updatePasswordForm.querySelector('#password-current').value;
+      const password = updatePasswordForm.querySelector('#password ').value;
       const passwordConfirm =
-        updatePasswordForm.querySelector('#password-confirm')?.value;
+        updatePasswordForm.querySelector('#password-confirm').value;
+
       await updateUserEmailName(
         { passwordCurrent, password, passwordConfirm },
         'password',
       );
 
+      // Clear the values after using them
       updatePasswordForm.querySelector('#password-current').value = '';
       updatePasswordForm.querySelector('#password ').value = '';
       updatePasswordForm.querySelector('#password-confirm').value = '';
+
+      // Change the textcontent of button from updating... to save password
       document.querySelector('.btn--save-password').textContent =
         'Save Password';
     });

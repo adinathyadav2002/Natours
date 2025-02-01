@@ -12884,33 +12884,38 @@ if (logOutButton) {
 // event listener for updating email and name form button
 if (updateDataForm) {
   var updateNameEmailButton = updateDataForm.querySelector('.btn');
-  if (updateNameEmailButton) updateNameEmailButton.addEventListener('click', function (e) {
-    var _updateDataForm$query, _updateDataForm$query2;
+  updateNameEmailButton.addEventListener('click', function (e) {
+    var _updateDataForm$query, _updateDataForm$query2, _updateDataForm$query3;
     e.preventDefault();
-    var email = (_updateDataForm$query = updateDataForm.querySelector('#email')) === null || _updateDataForm$query === void 0 ? void 0 : _updateDataForm$query.value;
-    var name = (_updateDataForm$query2 = updateDataForm.querySelector('#name')) === null || _updateDataForm$query2 === void 0 ? void 0 : _updateDataForm$query2.value;
-    (0, _updateUserData.updateUserEmailName)({
-      email: email,
-      name: name
-    }, 'data');
+    var form = new FormData();
+    form.append('name', (_updateDataForm$query = updateDataForm.querySelector('#name')) === null || _updateDataForm$query === void 0 ? void 0 : _updateDataForm$query.value);
+    form.append('email', (_updateDataForm$query2 = updateDataForm.querySelector('#email')) === null || _updateDataForm$query2 === void 0 ? void 0 : _updateDataForm$query2.value);
+    form.append('photo', (_updateDataForm$query3 = updateDataForm.querySelector('#photo')) === null || _updateDataForm$query3 === void 0 ? void 0 : _updateDataForm$query3.files[0]);
+    console.log(form);
+    (0, _updateUserData.updateUserEmailName)(form, 'data');
+
+    // THIS WILL NOT WORK FOR DATA WITH TEXT
+    // const email = updateDataForm.querySelector('#email')?.value;
+    // const name = updateDataForm.querySelector('#name')?.value;
+    // updateUserEmailName({ email, name }, 'data');
   });
 }
 
 // event listener for updating password form button
-if (updatePasswordForm) {
-  var updatePasswordButton = updatePasswordForm.querySelector('.btn');
-  if (updatePasswordButton) updatePasswordButton.addEventListener('click', /*#__PURE__*/function () {
+if (updatePasswordForm && updatePasswordForm.querySelector('.btn')) {
+  updatePasswordForm.querySelector('.btn').addEventListener('click', /*#__PURE__*/function () {
     var _ref = _asyncToGenerator(/*#__PURE__*/_regeneratorRuntime().mark(function _callee(e) {
-      var _updatePasswordForm$q, _updatePasswordForm$q2, _updatePasswordForm$q3;
       var passwordCurrent, password, passwordConfirm;
       return _regeneratorRuntime().wrap(function _callee$(_context) {
         while (1) switch (_context.prev = _context.next) {
           case 0:
             e.preventDefault();
             document.querySelector('.btn--save-password').textContent = 'Updating..';
-            passwordCurrent = (_updatePasswordForm$q = updatePasswordForm.querySelector('#password-current')) === null || _updatePasswordForm$q === void 0 ? void 0 : _updatePasswordForm$q.value;
-            password = (_updatePasswordForm$q2 = updatePasswordForm.querySelector('#password ')) === null || _updatePasswordForm$q2 === void 0 ? void 0 : _updatePasswordForm$q2.value;
-            passwordConfirm = (_updatePasswordForm$q3 = updatePasswordForm.querySelector('#password-confirm')) === null || _updatePasswordForm$q3 === void 0 ? void 0 : _updatePasswordForm$q3.value;
+
+            // get values from the form
+            passwordCurrent = updatePasswordForm.querySelector('#password-current').value;
+            password = updatePasswordForm.querySelector('#password ').value;
+            passwordConfirm = updatePasswordForm.querySelector('#password-confirm').value;
             _context.next = 7;
             return (0, _updateUserData.updateUserEmailName)({
               passwordCurrent: passwordCurrent,
@@ -12918,9 +12923,12 @@ if (updatePasswordForm) {
               passwordConfirm: passwordConfirm
             }, 'password');
           case 7:
+            // Clear the values after using them
             updatePasswordForm.querySelector('#password-current').value = '';
             updatePasswordForm.querySelector('#password ').value = '';
             updatePasswordForm.querySelector('#password-confirm').value = '';
+
+            // Change the textcontent of button from updating... to save password
             document.querySelector('.btn--save-password').textContent = 'Save Password';
           case 11:
           case "end":
@@ -12958,7 +12966,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49836" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51363" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

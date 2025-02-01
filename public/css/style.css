@@ -137,7 +137,7 @@ body {
     to(#eb4d4b)
   );
   background-image: linear-gradient(to right, #ff7730, #eb4d4b);
-  font-size: 3.5rem;
+  font-size: 3rem;
 }
 
 .heading-primary,
@@ -1211,7 +1211,7 @@ body {
   margin-bottom: 1rem;
 }
 .error__emoji {
-  font-size: 3.75rem;
+  font-size: 3rem;
   margin-left: 1rem;
 }
 .error__msg {
