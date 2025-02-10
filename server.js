@@ -12,6 +12,8 @@ dotEnv.config({ path: './config.env' });
 
 const app = require('./app');
 
+app.set('trust proxy', true);
+
 // console.log(app.get('env'));
 
 // shows all the environment variable
