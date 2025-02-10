@@ -34,7 +34,6 @@ if (updateDataForm) {
     form.append('name', updateDataForm.querySelector('#name')?.value);
     form.append('email', updateDataForm.querySelector('#email')?.value);
     form.append('photo', updateDataForm.querySelector('#photo')?.files[0]);
-    console.log(form);
 
     updateUserEmailName(form, 'data');
 

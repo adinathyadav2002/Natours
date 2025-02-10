@@ -3,4 +3,3 @@
 const map = document.getElementById('map');
 let locations;
 if (map) locations = map.dataset.locations;
-console.log(locations);

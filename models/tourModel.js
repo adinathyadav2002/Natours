@@ -160,10 +160,10 @@ tourSchema.pre('save', function (next) {
 //   next();
 // });
 
-tourSchema.post('save', function (doc, next) {
-  // console.log(doc);
-  next();
-});
+// tourSchema.post('save', function (doc, next) {
+//   // console.log(doc);
+//   next();
+// });
 
 // regular expression to all the methods that starts with find
 

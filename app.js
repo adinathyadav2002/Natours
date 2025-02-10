@@ -1,11 +1,9 @@
 const path = require('path');
 const express = require('express');
 const cookieParser = require('cookie-parser');
-// http request logger
 const morgan = require('morgan');
-// to limit the rate of request for api
+const compression = require('compression');
 const rateLimit = require('express-rate-limit');
-// security headers
 const helmet = require('helmet');
 const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
@@ -66,6 +64,8 @@ const limiter = rateLimit({
 });
 
 app.use('/api', limiter);
+
+app.use(compression());
 
 // used to print req on console
 if (process.env.NODE_ENV === 'development') {

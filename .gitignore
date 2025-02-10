@@ -25,3 +25,6 @@ yarn-error.log*
 
 # to hide password
 /config.env
+
+# to hide devlopment folder
+/.cache
