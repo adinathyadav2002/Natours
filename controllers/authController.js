@@ -13,7 +13,7 @@ const createToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
-const createSendCode = (user, statusCode, res) => {
+const createSendCode = (user, statusCode, req, res) => {
   const token = createToken(user._id);
 
   const cookieOptions = {
@@ -22,9 +22,8 @@ const createSendCode = (user, statusCode, res) => {
     ),
 
     httpOnly: true,
+    secure: req?.secure || req.headers?.['x-forwarded-proto'] === 'https',
   };
-
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
   res.cookie('jwt', token, cookieOptions);
 
@@ -63,7 +62,7 @@ exports.signup = catchAsync(async (req, res, next) => {
   const url = `${req.protocol}://${req.get('host')}/me`;
   await new Email(newUser, url).sendWelcome();
 
-  createSendCode(newUser, 201, res);
+  createSendCode(newUser, 201, req, res);
 });
 
 exports.login = async (req, res, next) => {
@@ -83,7 +82,7 @@ exports.login = async (req, res, next) => {
   }
 
   // 3) return token if everything is ok
-  createSendCode(user, 200, res);
+  createSendCode(user, 200, req, res);
 };
 
 exports.logOut = (req, res) => {
@@ -232,7 +231,7 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   // 4) login the user and send jwt to user
 
-  createSendCode(user, 200, res);
+  createSendCode(user, 200, req, res);
 });
 
 exports.updatePassword = catchAsync(async (req, res, next) => {
@@ -254,5 +253,5 @@ exports.updatePassword = catchAsync(async (req, res, next) => {
   // user.findByIdAndUpadate will not work
 
   // 4) log in user and send jwt
-  createSendCode(user, 200, res);
+  createSendCode(user, 200, req, res);
 });

@@ -3,10 +3,11 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const compression = require('compression');
-// const rateLimit = require('express-rate-limit');
+const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
+const cors = require('cors');
 
 const hpp = require('hpp');
 
@@ -21,6 +22,17 @@ const AppError = require('./utilities/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
 const app = express();
+
+app.enable('trust proxy');
+
+// enbled cross-origin-resource-sharing
+app.use(cors());
+// app.use(cors({
+//   origin: 'www.google.com'  // we will share this api with google origin only
+// }));
+// all delete, put, patch, and post requests for all routes
+// we can also specify one route
+app.options('*', cors());
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'views'));
@@ -57,15 +69,13 @@ app.use(
   }),
 );
 
-// const limiter = rateLimit({
-//   max: 100,
-//   windowMs: 60 * 60 * 1000,
-//   message: 'Too many requests from this IP, please try again in an hour!',
-//   keyGenerator: (req) => req.ip,
-//   proxy: true,
-// });
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again in an hour!',
+});
 
-// app.use('/api', limiter);
+app.use('/api', limiter);
 
 app.use(compression());
 
