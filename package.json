@@ -52,7 +52,6 @@
     "parcel-bundler": "^1.12.5",
     "prettier": "^3.3.3"
   },
-  // require for production
   "engines": {
     "node": ">=10.0.0"
   }
