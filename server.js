@@ -12,7 +12,7 @@ dotEnv.config({ path: './config.env' });
 
 const app = require('./app');
 
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 // console.log(app.get('env'));
 
