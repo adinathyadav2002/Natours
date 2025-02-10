@@ -11,13 +11,13 @@ const tourSchema = new mongoose.Schema(
       trim: true,
       maxlength: ['40', 'A Tour must have at most 40 characters'],
       minlength: ['10', 'A Tour must have at least 10 characters'],
-      // to check name contains only characters or letters not space
+      // to check name contains only characters or letters whith space
       validate: {
         validator: function (val) {
           return validator.isAlpha(val.replace(/\s/g, ''));
         },
+        message: 'Tour name must only contain characters',
       },
-      message: 'Tour name must only contain characters',
     },
     duration: {
       type: Number,
@@ -186,14 +186,6 @@ tourSchema.pre(/^find/, function (next) {
     path: 'guides',
     select: '-__v',
   });
-  next();
-});
-
-tourSchema.post(/^find/, function (doc, next) {
-  // console.log(doc);
-  // console.log(
-  //   `The time taken to execute this query is ${Date.now() - this.start}`,
-  // );
   next();
 });
 

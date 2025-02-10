@@ -1,9 +1,66 @@
+const multer = require('multer');
+const sharp = require('sharp');
+
 const factoryController = require('./factoryController');
-
 const Tour = require('../models/tourModel');
-
 const catchAsync = require('../utilities/catchAsync');
 const AppError = require('../utilities/appError');
+
+// TO STORE THE IMAGE IN THE MEMORY
+const multerStorage = multer.memoryStorage();
+
+// cb is same as next()
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image')) {
+    cb(null, true);
+  } else {
+    cb(new AppError('Not an image! Please upload only images', 400), false);
+  }
+};
+
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+// for arrays of more than one image
+exports.uploadTourImages = upload.fields([
+  { name: 'imageCover', maxCount: 1 },
+  { name: 'images', maxCount: 3 },
+]);
+
+// for more than one image
+// upload.array('images', 5);  -- req.files
+
+// for one image
+// upload.single('photo')      -- req.file
+
+exports.resizeUserPhoto = catchAsync(async (req, res, next) => {
+  if (!req.files.imageCover || !req.files.images) return next();
+
+  req.body.imageCover = `tour-${req.params.id}-${Date.now()}-cover.jpeg `;
+
+  await sharp(req.files.imageCover[0].buffer)
+    .resize(2000, 1300)
+    .toFormat('jpeg')
+    .jpeg({ quality: 90 })
+    .toFile(`public/img/tours/${req.body.imageCover}`);
+
+  req.body.images = [];
+
+  // Wating all the promises so we get all the images correctly from req.body.images
+  await Promise.all(
+    req.files.images.map(async (file, i) => {
+      const fileName = `tour-${req.params.id}-${Date.now()}-${i + 1}`;
+
+      await sharp(file.buffer)
+        .resize(2000, 1300)
+        .toFormat('jpeg')
+        .jpeg({ quality: 90 })
+        .toFile(`public/img/tours/${fileName}`);
+
+      req.body.images.push(fileName);
+    }),
+  );
+
+  next();
+});
 
 exports.aliasTopFiveCheap = (req, res, next) => {
   // TODO: ALWAYS REMEMBER ENDPOINTS SHOULD BE STRING
@@ -25,7 +82,7 @@ exports.modifyTourData = catchAsync(async function (req, res, next) {
     runValidators: true,
   });
 
-  if (!tour) return new AppError('No Tour found with that ID', 404);
+  if (!tour) return next(new AppError('No Tour found with that ID', 404));
 
   res.status(200).json({
     status: 'success',

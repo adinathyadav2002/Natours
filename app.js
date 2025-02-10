@@ -1,5 +1,6 @@
 const path = require('path');
 const express = require('express');
+const cookieParser = require('cookie-parser');
 // http request logger
 const morgan = require('morgan');
 // to limit the rate of request for api
@@ -35,6 +36,10 @@ app.use(helmet());
 // middleware to parse incoming JSON data from the request body.
 // BODY PARSER
 app.use(express.json({ limit: '10kb' }));
+// COOKIE PARSER so we can use (req.cookie.jwt) because req.header.cookies is string
+app.use(cookieParser());
+// FORM ELEMENT VALUES PARSER
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
 // Data sanitization against NOSQL query injection "email": { $gt : ""}
 app.use(mongoSanitize());
@@ -55,7 +60,7 @@ app.use(
 );
 
 const limiter = rateLimit({
-  max: 200,
+  max: 100,
   windowMs: 60 * 60 * 1000,
   message: 'Too many requests from this IP, please try again in an hour!',
 });
@@ -71,6 +76,10 @@ if (process.env.NODE_ENV === 'development') {
 // if middleware is defined after sending the response
 // then it will not run so position of middleware in code important
 app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "script-src 'self' https://cdnjs.cloudflare.com;",
+  );
   next(); // it is compulsory to call next
 });
 

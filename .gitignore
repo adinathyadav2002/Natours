@@ -24,4 +24,4 @@ yarn-error.log*
 
 
 # to hide password
-.config.env
+/config.env

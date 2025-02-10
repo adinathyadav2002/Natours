@@ -32,7 +32,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please enter your mail.'],
     validate: [validator.isEmail, 'Please provide valid email'],
   },
-  photo: String,
+  photo: { type: String, default: 'default.jpg' },
   role: {
     type: String,
     enum: ['user', 'guide', 'lead-guide', 'admin'],
@@ -68,7 +68,7 @@ const userSchema = new mongoose.Schema({
 userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
 
-  //sometime jwt toke exicutes first and passwordChangeAt take
+  // sometime jwt token exicutes first and passwordChangeAt take
   // time to save in database
   // our validator will not validate this case if jwt is created before
   // password change so we subtract 1sec
@@ -81,6 +81,12 @@ userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
   // encrypt the password with salt of 12 (salt dpt strenth of encription)
+  // higher the value of salt more will the security and speed will be slow
+  // Salt Rounds	Security	        Speed
+  // 8	          Low	              Fast
+  // 10	          Medium	          Moderate
+  // 12	          High	            Slower but secure
+  // 14+	        Very High	        Very slow
   this.password = await bcrypt.hash(this.password, 12);
 
   // delete passwordConfirm from fields
@@ -98,6 +104,7 @@ userSchema.methods.checkCorrectPassword = async function (
 
 userSchema.methods.checkPasswordChanged = function (jwtTimestamp) {
   if (this.passwordChangedAt) {
+    // convert it into minutes
     const changedTimestamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
       10,
@@ -107,6 +114,7 @@ userSchema.methods.checkPasswordChanged = function (jwtTimestamp) {
   return false;
 };
 
+// instance method
 userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString('hex');
 

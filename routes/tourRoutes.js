@@ -29,6 +29,8 @@ router
   )
   .patch(
     authController.protect,
+    tourController.uploadTourImages,
+    tourController.resizeUserPhoto,
     authController.restrictTo('lead-guide', 'admin'),
     tourController.modifyTourData,
   );

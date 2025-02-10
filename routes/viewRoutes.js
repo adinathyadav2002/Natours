@@ -3,15 +3,17 @@ const express = require('express');
 const router = express.Router();
 
 const viewController = require('../controllers/viewController');
+const authController = require('../controllers/authController');
 
-// router.get('/', (req, res) => {
-//   res.status(200).render('base', {
-//     title: 'Explore the Tours',
-//   });
-// });
+router.get('/login', authController.isLoggedIn, viewController.getLoginForm);
+router.get('/tour/:slug', authController.isLoggedIn, viewController.getTour);
+router.get('/', authController.isLoggedIn, viewController.getOverview);
+router.get('/me', authController.protect, viewController.getAccount);
 
-router.get('/tour/:slug', viewController.getTour);
-
-router.get('/', viewController.getOverview);
+// router.post(
+//   '/submit-user-data',
+//   authController.protect,
+//   viewController.updateUserData,
+// );
 
 module.exports = router;
